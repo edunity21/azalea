@@ -794,8 +794,18 @@ function saveRoster() {
     rosterRows = o.rows || [];
     paintRoster();
     $('#rsText').value = '';
-    peekRoster();
-    say(o.saved + '명을 저장했습니다.' + (o.note ? ' ' + o.note : ''));
+
+    var msg = (o.saved || 0) + '명을 저장했습니다.';
+    var sk = o.skipped || [];
+    if (sk.length) msg += ' 건너뜀 ' + sk.length + '줄: ' + sk.slice(0, 5).join(', ');
+    say(msg);
+
+    var p = $('#rsPeek');
+    p.textContent = msg;
+    p.style.color = sk.length ? '#B0243A' : '#1F7A5C';
+  }).catch(function () {
+    btn.disabled = false; btn.textContent = '명렬표 저장';
+    say('저장하지 못했습니다. 잠시 뒤 다시 눌러 주세요.');
   });
 }
 
