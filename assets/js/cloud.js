@@ -582,17 +582,20 @@ function mountTeacher() {
       '<span class="cl-now" id="clNow"></span>' +
     '</div>' +
 
+    '<div id="clApplied" style="margin:14px 0 18px;padding:11px 14px;border-radius:4px;' +
+      'background:#F3E3EC;font-size:13.5px;line-height:1.7">불러오는 중…</div>' +
+
     '<div class="cl-grid">' +
       '<label>시작 시각<input type="datetime-local" id="clFrom"></label>' +
       '<label>종료 시각<input type="datetime-local" id="clTo"></label>' +
       '<label>회차 이름<input type="text" id="clRound" maxlength="20" placeholder="1차"></label>' +
     '</div>' +
     '<div class="cl-checks">' +
-      '<label><input type="checkbox" id="clAgain"> 다시 제출 허용</label>' +
-      '<label><input type="checkbox" id="clRoll"> 명렬표에 있는 계정만 제출</label>' +
+      '<label><input type="checkbox" id="clAgain"> 다시 제출 허용 <span style="color:#9A939F">(바로 저장됨)</span></label>' +
+      '<label><input type="checkbox" id="clRoll"> 명렬표에 있는 계정만 제출 <span style="color:#9A939F">(바로 저장됨)</span></label>' +
     '</div>' +
     '<div class="btn-row">' +
-      '<button class="btn" type="button" id="clSave">시간 설정 저장</button>' +
+      '<button class="btn" type="button" id="clSave">시간 · 회차 저장</button>' +
       '<button class="btn ghost small" type="button" id="clClear">시간 제한 없애기</button>' +
     '</div>' +
 
@@ -612,16 +615,27 @@ function mountTeacher() {
 
   $('#clOn').addEventListener('click', function () {
     var on = this.getAttribute('aria-pressed') === 'true';
-    push({ on: !on });
+    push({ on: !on }, on ? '제출을 닫았습니다.' : '제출을 열었습니다.');
   });
+
+  /* 체크박스는 누르는 즉시 저장한다.
+     따로 저장을 눌러야 하면 자동 새로고침에 되돌아가 헷갈린다. */
+  $('#clAgain').addEventListener('change', function () {
+    push({ again: this.checked },
+         this.checked ? '다시 제출을 허용했습니다.' : '다시 제출을 막았습니다.');
+  });
+  $('#clRoll').addEventListener('change', function () {
+    push({ rollOnly: this.checked },
+         this.checked ? '명렬표에 있는 계정만 받습니다.' : '명렬표 제한을 풀었습니다.');
+  });
+
   $('#clSave').addEventListener('click', function () {
     push({ from: fromLocal($('#clFrom').value), to: fromLocal($('#clTo').value),
-           round: $('#clRound').value.trim(),
-           again: $('#clAgain').checked, rollOnly: $('#clRoll').checked });
+           round: $('#clRound').value.trim() }, '시간과 회차를 저장했습니다.');
   });
   $('#clClear').addEventListener('click', function () {
     $('#clFrom').value = ''; $('#clTo').value = '';
-    push({ from: '', to: '' });
+    push({ from: '', to: '' }, '시간 제한을 없앴습니다.');
   });
   $('#clReload').addEventListener('click', pull);
   $('#clPull').addEventListener('click', download);
@@ -635,20 +649,55 @@ function mountTeacher() {
 }
 
 var adminData = null;
+var pushing = 0;
 
-function push(patch) {
+function push(patch, done) {
+  pushing++;
   call('teacher_window', patch).then(function (o) {
-    if (!o.ok) { say(o.error); return; }
+    pushing--;
+    if (!o.ok) { say(o.error); pull(); return; }
     adminData = o; paintAdmin();
-    say('바꿨습니다.');
+    say(done || '바꿨습니다.');
+  }).catch(function () {
+    pushing--;
+    say('저장하지 못했습니다. 다시 눌러 주세요.');
   });
 }
 
 function pull() {
+  if (pushing) return;                      // 저장 중이면 덮어쓰지 않는다
   call('teacher_status').then(function (o) {
     if (!o.ok) { say(o.error); return; }
     adminData = o; paintAdmin();
   });
+}
+
+/* 지금 서버에 무엇이 저장되어 있는지 문장으로 알려 준다 */
+function appliedText(o) {
+  var bits = [];
+  bits.push(o.on ? '<b>제출 열림</b>' : '<b>제출 닫힘</b>');
+
+  if (o.from || o.to) {
+    bits.push('시간 ' + (o.from ? fmtShort(o.from) : '제한 없음') +
+              ' ~ ' + (o.to ? fmtShort(o.to) : '제한 없음'));
+  } else {
+    bits.push('시간 제한 없음');
+  }
+
+  bits.push(o.again ? '다시 제출 허용' : '한 번만 제출');
+  if (o.rollOnly) bits.push('명렬표 계정만');
+  if (o.round) bits.push('회차 ' + o.round);
+
+  var head = o.open
+    ? '지금 학생이 제출할 수 있습니다'
+    : '지금은 학생이 제출할 수 없습니다' + (o.why ? ' — ' + o.why : '');
+
+  return '<b>' + head + '</b><br>적용 중 · ' + bits.join(' · ');
+}
+
+function fmtShort(s) {
+  var m = String(s).match(/(\d{4})-(\d{1,2})-(\d{1,2})[ T](\d{1,2}):(\d{2})/);
+  return m ? (m[2] + '/' + m[3] + ' ' + ('0' + m[4]).slice(-2) + ':' + m[5]) : String(s);
 }
 
 function paintAdmin() {
@@ -659,11 +708,19 @@ function paintAdmin() {
   $('.cl-txt', t).textContent = o.on ? '제출 열림' : '제출 닫힘';
   $('#clNow').textContent = o.open ? ('지금 받는 중 · ' + o.now) : (o.why || '');
 
-  if (document.activeElement !== $('#clFrom')) $('#clFrom').value = toLocal(o.from);
-  if (document.activeElement !== $('#clTo'))   $('#clTo').value   = toLocal(o.to);
-  if (document.activeElement !== $('#clRound'))$('#clRound').value = o.round || '';
-  $('#clAgain').checked = !!o.again;
-  $('#clRoll').checked  = !!o.rollOnly;
+  var ap = $('#clApplied');
+  if (ap) {
+    ap.innerHTML = appliedText(o);
+    ap.style.background = o.open ? '#E8F3EF' : '#F3E3EC';
+    ap.style.color = o.open ? '#1F7A5C' : '#7A4A62';
+  }
+
+  var act = document.activeElement;
+  if (act !== $('#clFrom'))  $('#clFrom').value  = toLocal(o.from);
+  if (act !== $('#clTo'))    $('#clTo').value    = toLocal(o.to);
+  if (act !== $('#clRound')) $('#clRound').value = o.round || '';
+  if (act !== $('#clAgain')) $('#clAgain').checked = !!o.again;
+  if (act !== $('#clRoll'))  $('#clRoll').checked  = !!o.rollOnly;
 
   $('#clSum').innerHTML =
     '<div><b>' + o.people + '</b><span>제출한 학생</span></div>' +
