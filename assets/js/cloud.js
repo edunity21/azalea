@@ -693,7 +693,18 @@ function mountRoster(after) {
     '<p class="cap" style="color:#B0243A">저장하면 기존 명렬표를 <b>모두 지우고</b> 새로 씁니다. ' +
       '학번이 같으면 이미 묶인 계정은 그대로 남습니다.</p>' +
 
-    '<div id="rsList" style="margin-top:18px"></div>';
+    '<div id="rsList" style="margin-top:18px"></div>' +
+
+    '<div style="margin-top:22px;padding-top:16px;border-top:1px solid #DFD8DC">' +
+      '<p style="font-size:13px;font-weight:600;margin-bottom:6px">컴퓨터실에서 쓸 때</p>' +
+      '<p class="cap">한 대를 여러 학생이 쓰면 앞 학생 기록이 남습니다. ' +
+        '아래 주소로 들어가면 열 때마다 기기에 남은 기록을 지웁니다.</p>' +
+      '<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">' +
+        '<code id="rsShared" style="font-size:12.5px;background:#F7F4F2;padding:7px 11px;' +
+          'border-radius:3px;word-break:break-all"></code>' +
+        '<button class="btn ghost small" type="button" id="rsCopy">주소 복사</button>' +
+      '</div>' +
+    '</div>';
 
   host.insertBefore(box, after.nextSibling);
 
@@ -704,6 +715,16 @@ function mountRoster(after) {
   $('#rsFile').addEventListener('change', readFile);
   $('#rsSave').addEventListener('click', saveRoster);
   $('#rsReload').addEventListener('click', loadRoster);
+
+  var sharedUrl = location.origin + location.pathname + '?shared=1';
+  $('#rsShared').textContent = sharedUrl;
+  $('#rsCopy').addEventListener('click', function () {
+    var b = this;
+    navigator.clipboard.writeText(sharedUrl).then(function () {
+      b.textContent = '복사됨';
+      setTimeout(function () { b.textContent = '주소 복사'; }, 1500);
+    }).catch(function () { say('복사하지 못했습니다. 주소를 직접 긁어 주세요.'); });
+  });
 
   loadRoster();
 }
