@@ -375,7 +375,34 @@
 
 <script src="assets/js/data.js"></script>
 <script src="assets/js/xlsx-mini.js"></script>
+
+<!-- ============================================================
+     공용 컴퓨터 대비 — 반드시 app.js 보다 먼저 실행되어야 합니다.
+     ------------------------------------------------------------
+     · 늘         : 지난 로그인을 지워 항상 로그인 화면부터 시작
+     · ?shared=1  : 이 기기에 남은 활동지 기록까지 모두 지움
+                    (컴퓨터실처럼 한 대를 여러 명이 쓸 때)
+     ============================================================ -->
+<script>
+(function () {
+  var KEY = 'jindalrae.v3';
+  try {
+    var m = JSON.parse(localStorage.getItem(KEY) || '{}');
+    var changed = false;
+
+    if (m.session) { m.session = null; changed = true; }
+
+    if (/[?&]shared=1/.test(location.search)) {
+      if (m.roster && Object.keys(m.roster).length) { m.roster = {}; changed = true; }
+      if (m.quiz) { m.quiz = { done: 0, right: 0 }; changed = true; }
+    }
+
+    if (changed) localStorage.setItem(KEY, JSON.stringify(m));
+  } catch (e) { /* 저장소를 못 쓰는 기기면 그냥 넘어간다 */ }
+})();
+</script>
+
 <script src="assets/js/app.js"></script>
-<script src="assets/js/cloud.js?v=11"></script>
+<script src="assets/js/cloud.js?v=12"></script>
 </body>
 </html>
