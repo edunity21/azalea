@@ -294,6 +294,60 @@ function openApp(sid, name) {
   setTimeout(mountAll, 60);
 }
 
+/* ===================== 입구 나누기 =====================
+   학생 태블릿과 교실 수업용 PC 를 주소로 갈라 놓습니다.
+     .../azalea/            → 학습자용만
+     .../azalea/?teacher=1  → 수업자용까지
+   주소를 안다고 교사가 되는 것은 아닙니다. 권한은 서버가
+   이메일과 비밀번호로 다시 확인합니다.                      */
+
+var TEACHER_ENTRY = /[?&]teacher=1/.test(location.search);
+
+function splitEntry() {
+  var t = $('#pickTeacher');
+  if (!t) return;
+
+  if (TEACHER_ENTRY) {
+    t.style.display = '';
+    return;
+  }
+  t.style.display = 'none';
+
+  /* 학생 화면에 남는 안내 문구도 학생용으로 바꿔 준다 */
+  var hint = $('#pickHint');
+  if (hint) hint.textContent = '학교에서 받은 계정으로 들어옵니다.';
+}
+
+/* app.js 가 첫 화면을 그린 뒤에 손대야 한다 */
+window.addEventListener('load', function () {
+  splitEntry();
+  setTimeout(splitEntry, 400);
+});
+
+
+/* ===================== 교사 자동 로그아웃 =====================
+   수업이 끝나고 켜 둔 채 자리를 비워도, 20분 손대지 않으면
+   저절로 나가집니다.                                          */
+
+var IDLE_MIN = 20;
+var idleTimer = null;
+
+function armIdleLogout() {
+  function reset() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(function () {
+      alert('20분 동안 사용하지 않아 수업자 화면에서 나갑니다.');
+      var out = $('#logout');
+      if (out) out.click(); else location.reload();
+    }, IDLE_MIN * 60 * 1000);
+  }
+  ['click', 'keydown', 'mousemove', 'touchstart', 'scroll'].forEach(function (ev) {
+    document.addEventListener(ev, reset, { passive: true });
+  });
+  reset();
+}
+
+
 /* 원래 버튼을 가로챈다 — 문서에서 잡으면 app.js 보다 먼저 걸린다 */
 document.addEventListener('click', function (e) {
   if (S.passing) return;
@@ -696,14 +750,30 @@ function mountRoster(after) {
     '<div id="rsList" style="margin-top:18px"></div>' +
 
     '<div style="margin-top:22px;padding-top:16px;border-top:1px solid #DFD8DC">' +
-      '<p style="font-size:13px;font-weight:600;margin-bottom:6px">컴퓨터실에서 쓸 때</p>' +
-      '<p class="cap">한 대를 여러 학생이 쓰면 앞 학생 기록이 남습니다. ' +
-        '아래 주소로 들어가면 열 때마다 기기에 남은 기록을 지웁니다.</p>' +
-      '<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">' +
-        '<code id="rsShared" style="font-size:12.5px;background:#F7F4F2;padding:7px 11px;' +
-          'border-radius:3px;word-break:break-all"></code>' +
-        '<button class="btn ghost small" type="button" id="rsCopy">주소 복사</button>' +
+      '<p style="font-size:13px;font-weight:600;margin-bottom:6px">수업에 쓸 주소</p>' +
+      '<p class="cap">학생 주소에는 <b>수업자용 단추가 보이지 않습니다.</b> ' +
+        '교실 PC 는 아래 수업자용 주소로 들어오세요. 20분 손대지 않으면 저절로 나갑니다.</p>' +
+
+      '<div style="margin-top:10px">' +
+        '<p style="font-size:12px;color:#6B6570;margin-bottom:4px">학생 · 태블릿</p>' +
+        '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+          '<code id="rsUrlS" style="font-size:12.5px;background:#F7F4F2;padding:7px 11px;' +
+            'border-radius:3px;word-break:break-all"></code>' +
+          '<button class="btn ghost small" type="button" data-copy="rsUrlS">복사</button>' +
+        '</div>' +
       '</div>' +
+
+      '<div style="margin-top:12px">' +
+        '<p style="font-size:12px;color:#6B6570;margin-bottom:4px">수업자 · 교실 PC</p>' +
+        '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+          '<code id="rsUrlT" style="font-size:12.5px;background:#F3E3EC;padding:7px 11px;' +
+            'border-radius:3px;word-break:break-all"></code>' +
+          '<button class="btn ghost small" type="button" data-copy="rsUrlT">복사</button>' +
+        '</div>' +
+      '</div>' +
+
+      '<p class="cap" style="margin-top:10px">공용 컴퓨터에서 학생이 쓸 때는 학생 주소 뒤에 ' +
+        '<b>&shared=1</b> 을 붙이면 기기에 남은 기록까지 지웁니다.</p>' +
     '</div>';
 
   host.insertBefore(box, after.nextSibling);
@@ -716,15 +786,20 @@ function mountRoster(after) {
   $('#rsSave').addEventListener('click', saveRoster);
   $('#rsReload').addEventListener('click', loadRoster);
 
-  var sharedUrl = location.origin + location.pathname + '?shared=1';
-  $('#rsShared').textContent = sharedUrl;
-  $('#rsCopy').addEventListener('click', function () {
-    var b = this;
-    navigator.clipboard.writeText(sharedUrl).then(function () {
-      b.textContent = '복사됨';
-      setTimeout(function () { b.textContent = '주소 복사'; }, 1500);
-    }).catch(function () { say('복사하지 못했습니다. 주소를 직접 긁어 주세요.'); });
-  });
+  var base = location.origin + location.pathname;
+  $('#rsUrlS').textContent = base;
+  $('#rsUrlT').textContent = base + '?teacher=1';
+
+  var cps = box.querySelectorAll('[data-copy]');
+  for (var i = 0; i < cps.length; i++) {
+    cps[i].addEventListener('click', function () {
+      var b = this, txt = $('#' + b.getAttribute('data-copy')).textContent;
+      navigator.clipboard.writeText(txt).then(function () {
+        b.textContent = '복사됨';
+        setTimeout(function () { b.textContent = '복사'; }, 1500);
+      }).catch(function () { say('복사하지 못했습니다. 주소를 직접 긁어 주세요.'); });
+    });
+  }
 
   loadRoster();
 }
@@ -1066,7 +1141,7 @@ function mountAll() {
 
   console.log('[cloud.js] 입장 · 역할=' + wanted + ' · 교사계정=' + S.teacher);
 
-  if (asTeacher) { mountTeacher(); return; }
+  if (asTeacher) { mountTeacher(); armIdleLogout(); return; }
 
   mountSubmit();
   paintSubmit();
