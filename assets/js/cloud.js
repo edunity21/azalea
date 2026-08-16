@@ -15,8 +15,8 @@
 'use strict';
 
 /* ▼▼▼ 설치할 때 이 세 줄만 고칩니다 ▼▼▼ */
-var API       = 'https://script.google.com/macros/s/AKfycbzuagmq2b_JfTu3h6te6IreCM0JMKJdXCKKXHAI0qGdft0nF00P_Ftr6Y9FuJ8vqbCtig/exec';
-var CLIENT_ID = '205893269353-a88gdh9ijp27v5c7ca0o5ig3absiv89s.apps.googleusercontent.com';
+var API       = 'https://script.google.com/macros/s/AKfycbzmh-zTu3VL_pTp-uZs1nVyA0Fk3V94jAzrrBz1MhEwWWNE1LRoknowGuL3sgMGycG9gQ/exec';
+var CLIENT_ID = '432757752918-5i46ftsts6163gtqvrulquiu0n0sklaq.apps.googleusercontent.com';
 var DOMAIN    = 'ai.jne.kr';
 /* ▲▲▲ ------------------------------- ▲▲▲ */
 
