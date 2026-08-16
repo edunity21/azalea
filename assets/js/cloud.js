@@ -250,7 +250,7 @@ function enter() {
   btn.disabled = true; btn.textContent = '확인 중…';
   gateMsg('');
 
-  call('gate', { role: wanted, pw: pw }).then(function (o) {
+  call('gate', { role: wanted, pw: pw, sid: sid, name: name }).then(function (o) {
     btn.disabled = false; btn.textContent = '들어가기';
     if (!o.ok) {
       gateMsg(o.error || '들어갈 수 없습니다.');
@@ -258,7 +258,13 @@ function enter() {
       return;
     }
     S.pass = o.pass;
-    if (wanted === 'student') { S.sid = sid; S.name = name; }
+    if (wanted === 'student') {
+      /* 서버가 명렬표에서 확인한 값을 그대로 따른다 */
+      S.sid   = o.sid  || sid;
+      S.name  = o.name || name;
+      S.fixed = !!o.fixed || S.fixed;
+      sid = S.sid; name = S.name;
+    }
     openApp(sid, name);
   });
 }
@@ -592,7 +598,7 @@ function mountTeacher() {
     '</div>' +
     '<div class="cl-checks">' +
       '<label><input type="checkbox" id="clAgain"> 다시 제출 허용 <span style="color:#9A939F">(바로 저장됨)</span></label>' +
-      '<label><input type="checkbox" id="clRoll"> 명렬표에 있는 계정만 제출 <span style="color:#9A939F">(바로 저장됨)</span></label>' +
+      '<label><input type="checkbox" id="clRoll"> 명렬표에 있는 학번만 입장 <span style="color:#9A939F">(이름까지 대조 · 바로 저장됨)</span></label>' +
     '</div>' +
     '<div class="btn-row">' +
       '<button class="btn" type="button" id="clSave">시간 · 회차 저장</button>' +
@@ -612,6 +618,7 @@ function mountTeacher() {
     '<div class="cl-list" id="clList"></div>';
 
   host.insertBefore(box, after ? after.nextSibling : host.firstChild);
+  mountRoster(box);
 
   $('#clOn').addEventListener('click', function () {
     var on = this.getAttribute('aria-pressed') === 'true';
@@ -647,6 +654,198 @@ function mountTeacher() {
   pull();
   setInterval(function () { if (isVisible($('#records'))) pull(); }, 25000);
 }
+
+/* ══════════════════════════════════════════════════════════
+   명렬표 관리
+   ══════════════════════════════════════════════════════════ */
+
+var rosterRows = [];
+
+function mountRoster(after) {
+  if ($('#clRosterCard')) return;
+  var host = after && after.parentNode; if (!host) return;
+
+  var box = el('section', 'card cl-card');
+  box.id = 'clRosterCard';
+  box.innerHTML =
+    '<h3 class="cl-h">명렬표</h3>' +
+    '<p class="cap">여기에 넣어 둔 <b>학번·이름</b>이 맞아야 학생이 들어옵니다. ' +
+      '계정은 학생이 처음 들어올 때 저절로 묶입니다. 학번은 <b>네 자리</b>입니다. (3학년 9반 50번 → 3950)</p>' +
+
+    '<div class="btn-row" style="margin:14px 0 10px">' +
+      '<button class="btn ghost" type="button" id="rsForm">엑셀 양식 내려받기</button>' +
+      '<button class="btn ghost" type="button" id="rsPick">파일 불러오기 (CSV)</button>' +
+      '<button class="btn ghost small" type="button" id="rsNow">지금 명렬표 내려받기</button>' +
+      '<input type="file" id="rsFile" accept=".csv,.txt" style="display:none">' +
+    '</div>' +
+
+    '<label style="display:block;font-size:13px;font-weight:600;margin:16px 0 6px">' +
+      '엑셀에서 학번·이름 두 칸을 복사해 그대로 붙여넣으세요</label>' +
+    '<textarea id="rsText" rows="7" placeholder="3901\t김민준\n3902\t이서연\n3903\t박도윤" ' +
+      'style="width:100%;font-family:ui-monospace,Menlo,monospace;font-size:13.5px;' +
+      'padding:11px 13px;border:1px solid #DFD8DC;border-radius:3px;line-height:1.7"></textarea>' +
+    '<p class="cap" id="rsPeek">붙여넣으면 여기에 확인 결과가 나옵니다.</p>' +
+
+    '<div class="btn-row" style="margin-top:12px">' +
+      '<button class="btn" type="button" id="rsSave">명렬표 저장</button>' +
+      '<button class="btn ghost small" type="button" id="rsReload">다시 불러오기</button>' +
+    '</div>' +
+    '<p class="cap" style="color:#B0243A">저장하면 기존 명렬표를 <b>모두 지우고</b> 새로 씁니다. ' +
+      '학번이 같으면 이미 묶인 계정은 그대로 남습니다.</p>' +
+
+    '<div id="rsList" style="margin-top:18px"></div>';
+
+  host.insertBefore(box, after.nextSibling);
+
+  $('#rsText').addEventListener('input', peekRoster);
+  $('#rsForm').addEventListener('click', downloadForm);
+  $('#rsNow').addEventListener('click', downloadNow);
+  $('#rsPick').addEventListener('click', function () { $('#rsFile').click(); });
+  $('#rsFile').addEventListener('change', readFile);
+  $('#rsSave').addEventListener('click', saveRoster);
+  $('#rsReload').addEventListener('click', loadRoster);
+
+  loadRoster();
+}
+
+/* 붙여넣은 글을 학번·이름으로 나눈다 */
+function parseRoster(text) {
+  var out = [], bad = [];
+  String(text || '').split(/\r?\n/).forEach(function (line) {
+    var t = line.trim();
+    if (!t) return;
+    if (/^학번/.test(t)) return;                         // 머리글 줄은 건너뜀
+    var p = t.split(/[\t,;]+|\s{1,}/).filter(function (x) { return x !== ''; });
+    if (p.length < 2) { bad.push(t); return; }
+    var sid = p[0].replace(/[^0-9]/g, '');
+    var name = p.slice(1).join(' ').trim();
+    if (!/^\d{4}$/.test(sid) || !name) { bad.push(t); return; }
+    out.push({ sid: sid, name: name });
+  });
+  return { rows: out, bad: bad };
+}
+
+function peekRoster() {
+  var r = parseRoster($('#rsText').value);
+  var p = $('#rsPeek');
+  if (!r.rows.length && !r.bad.length) {
+    p.textContent = '붙여넣으면 여기에 확인 결과가 나옵니다.';
+    p.style.color = '';
+    return;
+  }
+  var msg = r.rows.length + '명 확인';
+  if (r.bad.length) msg += ' · 형식이 이상한 줄 ' + r.bad.length + '개: ' + r.bad.slice(0, 3).join(' / ');
+  p.textContent = msg;
+  p.style.color = r.bad.length ? '#B0243A' : '#1F7A5C';
+}
+
+function downloadForm() {
+  if (!window.MiniXLSX) { say('엑셀 도구를 찾지 못했습니다.'); return; }
+  MiniXLSX.download('명렬표_양식.xlsx', [{
+    name: '명렬표',
+    rows: [['학번', '이름'], ['3901', '김민준'], ['3902', '이서연'], ['3903', '박도윤']],
+    widths: [12, 16]
+  }]);
+  say('양식을 내려받았습니다. 학번은 네 자리로 채워 주세요.');
+}
+
+function downloadNow() {
+  if (!rosterRows.length) { say('아직 명렬표가 비어 있습니다.'); return; }
+  if (!window.MiniXLSX) { say('엑셀 도구를 찾지 못했습니다.'); return; }
+  var rows = [['학번', '이름', '묶인 계정']];
+  rosterRows.forEach(function (r) { rows.push([r.sid, r.name, r.email || '']); });
+  MiniXLSX.download('명렬표_' + new Date().toISOString().slice(0, 10) + '.xlsx',
+    [{ name: '명렬표', rows: rows, widths: [12, 16, 30] }]);
+}
+
+function readFile(e) {
+  var f = e.target.files && e.target.files[0];
+  if (!f) return;
+  var fr = new FileReader();
+  fr.onload = function () {
+    var t = String(fr.result || '').replace(/^\uFEFF/, '');
+    $('#rsText').value = t;
+    peekRoster();
+    say('파일을 읽었습니다. 확인한 뒤 [명렬표 저장] 을 누르세요.');
+  };
+  fr.onerror = function () { say('파일을 읽지 못했습니다.'); };
+  fr.readAsText(f, 'utf-8');
+  e.target.value = '';
+}
+
+function loadRoster() {
+  call('roster_get').then(function (o) {
+    if (!o.ok) { say(o.error); return; }
+    rosterRows = o.rows || [];
+    paintRoster();
+  });
+}
+
+function saveRoster() {
+  var r = parseRoster($('#rsText').value);
+  if (!r.rows.length) { say('저장할 명렬이 없습니다.'); return; }
+  if (!confirm(r.rows.length + '명으로 명렬표를 새로 씁니다. 계속할까요?')) return;
+
+  var btn = $('#rsSave');
+  btn.disabled = true; btn.textContent = '저장 중…';
+  call('roster_set', { rows: r.rows }).then(function (o) {
+    btn.disabled = false; btn.textContent = '명렬표 저장';
+    if (!o.ok) { say(o.error); return; }
+    rosterRows = o.rows || [];
+    paintRoster();
+    $('#rsText').value = '';
+    peekRoster();
+    say(o.saved + '명을 저장했습니다.' + (o.note ? ' ' + o.note : ''));
+  });
+}
+
+function unbind(sid) {
+  if (!confirm(sid + '번에 묶인 계정을 풀까요? 다른 학생이 다시 등록할 수 있게 됩니다.')) return;
+  call('roster_unbind', { sid: sid }).then(function (o) {
+    if (!o.ok) { say(o.error); return; }
+    rosterRows = o.rows || [];
+    paintRoster();
+    say(sid + '번 계정을 풀었습니다.');
+  });
+}
+
+function paintRoster() {
+  var w = $('#rsList'); if (!w) return;
+  if (!rosterRows.length) {
+    w.innerHTML = '<p class="cap">명렬표가 비어 있습니다. 위에 붙여넣고 저장하세요.</p>';
+    return;
+  }
+  var done = rosterRows.filter(function (r) { return r.email; }).length;
+
+  var h = '<p class="cap" style="margin-bottom:8px"><b>' + rosterRows.length + '명</b> 등록 · ' +
+          '계정 묶임 <b>' + done + '명</b> · 아직 ' + (rosterRows.length - done) + '명</p>' +
+          '<table style="width:100%;border-collapse:collapse;font-size:13px">' +
+          '<tr style="text-align:left;color:#6B6570">' +
+            '<th style="padding:6px 4px;width:70px">학번</th>' +
+            '<th style="padding:6px 4px;width:90px">이름</th>' +
+            '<th style="padding:6px 4px">묶인 계정</th>' +
+            '<th style="padding:6px 4px;width:60px"></th></tr>';
+
+  rosterRows.forEach(function (r) {
+    h += '<tr style="border-top:1px solid #EFEAEC">' +
+         '<td style="padding:6px 4px;font-variant-numeric:tabular-nums">' + esc(r.sid) + '</td>' +
+         '<td style="padding:6px 4px">' + esc(r.name) + '</td>' +
+         '<td style="padding:6px 4px;color:' + (r.email ? '#1F7A5C' : '#9A939F') + '">' +
+           (r.email ? esc(r.email) : '아직 없음') + '</td>' +
+         '<td style="padding:6px 4px">' +
+           (r.email ? '<button type="button" class="rs-un" data-sid="' + esc(r.sid) + '" ' +
+             'style="background:none;border:none;color:#B0243A;cursor:pointer;' +
+             'font-family:inherit;font-size:12.5px;text-decoration:underline;padding:0">해제</button>' : '') +
+         '</td></tr>';
+  });
+  w.innerHTML = h + '</table>';
+
+  var btns = w.querySelectorAll('.rs-un');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function () { unbind(this.getAttribute('data-sid')); });
+  }
+}
+
 
 var adminData = null;
 var pushing = 0;
