@@ -341,9 +341,10 @@ function mountFullscreen() {
 /* ===================== 학생 : 제출 칸 ===================== */
 
 function mountSubmit() {
-  if ($('#clSubmitCard')) return;
-  var host = $('#sheet .card'); if (!host) return;
-  var firstAct = $('#sheet .act');
+  if ($('#clSubmitCard')) return true;
+
+  var host = $('#sheet .card') || $('#sheet');
+  if (!host) { console.warn('[cloud.js] 제출 칸을 붙일 자리를 찾지 못했습니다.'); return false; }
 
   var box = el('div', 'act cl-act');
   box.id = 'clSubmitCard';
@@ -356,11 +357,21 @@ function mountSubmit() {
     '</div>' +
     '<p class="cap" id="clMine"></p>' +
     '<p class="cap cl-auto" id="clAuto">[저장하기] 를 누르면 선생님 서버에도 자동으로 보관됩니다.</p>';
-  host.insertBefore(box, firstAct || null);
+
+  // .card 의 바로 아래 자식인 .act 앞에 넣는다
+  var firstAct = null, kids = host.children;
+  for (var i = 0; i < kids.length; i++) {
+    if (kids[i].classList && kids[i].classList.contains('act')) { firstAct = kids[i]; break; }
+  }
+  if (firstAct) host.insertBefore(box, firstAct);
+  else host.appendChild(box);
+
+  console.log('[cloud.js] 제출 칸 생성됨');
 
   $('#clSend').addEventListener('click', send);
   $('#clRefresh').addEventListener('click', function () { refresh(true); });
   hookAutosave();
+  return true;
 }
 
 
@@ -761,8 +772,28 @@ function mountLogout() {
 function mountAll() {
   mountFullscreen();
   mountLogout();
-  if (S.teacher) mountTeacher();
-  else { mountSubmit(); paintSubmit(); refresh(); }
+
+  /* 계정이 아니라 '고른 역할'을 따른다.
+     선생님 계정으로 학습자용에 들어가 미리 확인할 수 있어야 한다. */
+  var asTeacher = (wanted === 'teacher') && S.teacher;
+
+  console.log('[cloud.js] 입장 · 역할=' + wanted + ' · 교사계정=' + S.teacher);
+
+  if (asTeacher) { mountTeacher(); return; }
+
+  mountSubmit();
+  paintSubmit();
+  refresh();
+
+  /* app.js 가 활동지 화면을 다시 그리면 제출 칸이 사라진다.
+     없어졌으면 조용히 다시 붙인다.                          */
+  clearInterval(mountAll._watch);
+  mountAll._watch = setInterval(function () {
+    if (!$('#clSubmitCard')) {
+      if (mountSubmit()) paintSubmit();
+    }
+    if (!$('#fsBtn')) mountFullscreen();
+  }, 1200);
 }
 
 
