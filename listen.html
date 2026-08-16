@@ -377,5 +377,91 @@
 <script src="assets/js/xlsx-mini.js"></script>
 <script src="assets/js/app.js"></script>
 <script src="assets/js/cloud.js?v=4"></script>
+
+<!-- ============================================================
+     index.html(구글 로그인)에서 넘어온 정보로 관문을 자동 통과
+     ------------------------------------------------------------
+     · 세션이 있으면  → 학번·이름·비밀번호를 채우고 바로 입장
+     · 세션이 없으면  → index.html로 돌려보냄
+     · 예전 방식으로 직접 들어오려면 주소 끝에 ?direct=1
+     ============================================================ -->
+<script>
+(function(){
+  var GATE_PAGE = 'index.html';
+  var KEY = 'azalea_user';
+
+  /* 직접 접속 허용 */
+  if (location.search.indexOf('direct=1') > -1) return;
+
+  var s = null;
+  try { s = JSON.parse(sessionStorage.getItem(KEY) || 'null'); } catch(e){}
+
+  /* 세션 없음 → 로그인 페이지로 */
+  if (!s || !s.role){
+    location.replace(GATE_PAGE);
+    return;
+  }
+
+  /* 3시간 지나면 다시 로그인 */
+  if (s.at && (Date.now() - s.at) > 3*60*60*1000){
+    try { sessionStorage.removeItem(KEY); } catch(e){}
+    location.replace(GATE_PAGE);
+    return;
+  }
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  function fire(el, type){
+    if (!el) return;
+    el.dispatchEvent(new Event(type, { bubbles:true }));
+  }
+  function setVal(el, v){
+    if (!el) return;
+    el.value = v;
+    fire(el, 'input');
+    fire(el, 'change');
+  }
+
+  function pass(){
+    var pick = (s.role === 'teacher') ? $('pickTeacher') : $('pickStudent');
+    if (!pick || !$('gateGo')) return false;
+
+    pick.click();
+
+    if (s.role === 'student'){
+      setVal($('gSid'),  s.studentId || '');
+      setVal($('gName'), s.name || '');
+      setVal($('gPw'),   (window.CONFIG && CONFIG.studentPw) || '');
+    } else {
+      setVal($('gPw'),   (window.CONFIG && CONFIG.adminPw) || '');
+    }
+
+    $('gateGo').click();
+
+    /* 관문이 닫혔는지 확인 */
+    var gate = $('gate');
+    return !gate || !gate.classList.contains('on');
+  }
+
+  /* app.js가 준비될 때까지 최대 2초간 재시도 */
+  var tries = 0;
+  var timer = setInterval(function(){
+    tries++;
+    if (pass() || tries > 20) clearInterval(timer);
+  }, 100);
+
+  /* 나가기를 누르면 세션도 함께 지움 */
+  window.addEventListener('load', function(){
+    var out = $('logout');
+    if (out) out.addEventListener('click', function(){
+      try { sessionStorage.removeItem(KEY); } catch(e){}
+      setTimeout(function(){ location.replace(GATE_PAGE); }, 50);
+    });
+  });
+
+  /* 다른 스크립트에서 쓸 수 있도록 열어 둠 */
+  window.AZALEA_USER = s;
+})();
+</script>
 </body>
 </html>

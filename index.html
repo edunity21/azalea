@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>진달래꽃 감상수업</title>
+<title>진달래꽃 감상수업 · 입장</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
@@ -11,10 +11,10 @@
     --paper:#F7F4F2;
     --ink:#1C1A1F;
     --ink-soft:#6B6570;
+    --ink-faint:#9A939F;
     --azalea:#A8326B;
+    --azalea-pale:#F3E3EC;
     --line:#DFD8DC;
-    --ok:#1F7A5C;
-    --ok-bg:#E8F3EF;
     --err:#B0243A;
     --err-bg:#FBE9EC;
   }
@@ -24,101 +24,80 @@
     color:var(--ink);
     font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
     line-height:1.6;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    min-height:100vh;
-    padding:24px 16px;
+    display:flex;align-items:center;justify-content:center;
+    min-height:100vh;padding:24px 16px;
     -webkit-font-smoothing:antialiased;
   }
-  .card{
-    width:100%;
-    max-width:460px;
-    background:#fff;
-    border:1px solid var(--line);
-    border-radius:4px;
-  }
+  .card{width:100%;max-width:440px;background:#fff;border:1px solid var(--line);border-radius:4px}
   .head{padding:32px 30px 24px;border-bottom:1px solid var(--line)}
   .eyebrow{font-size:11px;letter-spacing:.16em;color:var(--azalea);font-weight:600;margin-bottom:12px}
-  h1{font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.3}
+  h1{font-size:25px;font-weight:700;letter-spacing:-.02em;line-height:1.3}
   .sub{margin-top:9px;font-size:14px;color:var(--ink-soft)}
   .body{padding:26px 30px 30px}
 
+  /* 1단계 · 구글 */
   .signin{display:flex;justify-content:center;min-height:44px}
   .hint{margin-top:16px;font-size:13px;color:var(--ink-soft);text-align:center}
   .hint b{color:var(--ink);font-weight:600}
 
-  #form{display:none}
-  #form.on{display:block}
-  #signinArea.off{display:none}
+  /* 2단계 */
+  #step2{display:none}
+  #step2.on{display:block}
+  #step1.off{display:none}
 
   .who{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    padding:11px 14px;
-    background:var(--paper);
-    border-radius:3px;
-    font-size:13.5px;
-    margin-bottom:24px;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:11px 14px;background:var(--paper);border-radius:3px;
+    font-size:13.5px;margin-bottom:22px;
   }
   .who span{color:var(--ink-soft)}
   .who b{font-weight:600;color:var(--ink)}
   .linkbtn{
-    background:none;border:none;padding:0;
-    font-family:inherit;font-size:12.5px;
-    color:var(--azalea);cursor:pointer;
-    text-decoration:underline;white-space:nowrap;
+    background:none;border:none;padding:0;font-family:inherit;font-size:12.5px;
+    color:var(--azalea);cursor:pointer;text-decoration:underline;white-space:nowrap;
   }
+
+  /* 역할 탭 */
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:24px;border:1px solid var(--line);border-radius:3px;overflow:hidden}
+  .tabs button{
+    font-family:inherit;font-size:14px;font-weight:600;
+    padding:11px;border:none;cursor:pointer;
+    background:#fff;color:var(--ink-soft);
+    transition:background .15s,color .15s;
+  }
+  .tabs button + button{border-left:1px solid var(--line)}
+  .tabs button.sel{background:var(--ink);color:#fff}
 
   label{display:block;font-size:13px;font-weight:600;margin-bottom:7px}
-  .field{margin-bottom:20px}
-  input[type=text],textarea{
-    width:100%;
-    font-family:inherit;
-    font-size:15px;
-    color:var(--ink);
-    background:#fff;
-    border:1px solid var(--line);
-    border-radius:3px;
-    padding:11px 13px;
-    transition:border-color .15s;
+  .field{margin-bottom:18px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  input{
+    width:100%;font-family:inherit;font-size:15px;color:var(--ink);
+    background:#fff;border:1px solid var(--line);border-radius:3px;
+    padding:11px 13px;transition:border-color .15s;
   }
-  input[type=text]:focus,textarea:focus{outline:none;border-color:var(--azalea)}
-  textarea{resize:vertical;min-height:130px;line-height:1.65}
-  .count{margin-top:6px;font-size:12px;color:var(--ink-soft);text-align:right}
+  input:focus{outline:none;border-color:var(--azalea)}
 
-  .submit{
-    width:100%;
-    font-family:inherit;font-size:15px;font-weight:600;
-    padding:13px;
-    background:var(--ink);color:#fff;
-    border:none;border-radius:3px;cursor:pointer;
+  .go{
+    width:100%;font-family:inherit;font-size:15px;font-weight:600;
+    padding:13px;background:var(--ink);color:#fff;
+    border:none;border-radius:3px;cursor:pointer;margin-top:4px;
     transition:background .15s;
   }
-  .submit:hover:not(:disabled){background:#000}
-  .submit:disabled{background:#B9B3BB;cursor:default}
-  .submit:focus-visible{outline:2px solid var(--azalea);outline-offset:2px}
+  .go:hover{background:#000}
+  .go:focus-visible{outline:2px solid var(--azalea);outline-offset:2px}
 
   .msg{
-    display:none;
-    margin-bottom:20px;
-    padding:13px 15px;
-    border-radius:3px;
-    font-size:14px;
-    font-weight:600;
+    display:none;margin-bottom:18px;padding:12px 15px;
+    background:var(--err-bg);color:var(--err);
+    border-radius:3px;font-size:13.5px;font-weight:600;
   }
   .msg.on{display:block}
-  .msg.ok{background:var(--ok-bg);color:var(--ok)}
-  .msg.err{background:var(--err-bg);color:var(--err)}
 
-  #done{display:none;text-align:center;padding:12px 0}
-  #done.on{display:block}
-  #done .mark{font-size:36px;color:var(--azalea);margin-bottom:14px}
-  #done p{font-size:15px;margin-bottom:6px}
-  #done .small{font-size:13px;color:var(--ink-soft)}
-
+  .note{
+    margin-top:22px;padding-top:16px;border-top:1px solid var(--line);
+    font-size:12.5px;color:var(--ink-faint);
+  }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -133,37 +112,58 @@
 
   <div class="body">
 
-    <div id="signinArea">
+    <!-- 1단계 · 구글 로그인 -->
+    <div id="step1">
       <div class="signin" id="gbtn"></div>
-      <p class="hint"><b>@ai.jne.kr</b> 계정만 로그인됩니다.</p>
+      <p class="hint"><b>@ai.jne.kr</b> 계정만 입장할 수 있습니다.</p>
     </div>
 
-    <div id="form">
+    <!-- 2단계 · 역할 + 비밀번호 -->
+    <div id="step2">
       <div class="who">
         <span><b id="whoName"></b> · <span id="whoMail"></span></span>
         <button class="linkbtn" id="btnOut">로그아웃</button>
       </div>
 
+      <div class="tabs">
+        <button id="tabS" class="sel">학생</button>
+        <button id="tabT">교사</button>
+      </div>
+
       <div class="msg" id="msg"></div>
 
-      <div class="field">
-        <label for="sid">학번</label>
-        <input type="text" id="sid" placeholder="예: 30115" inputmode="numeric" autocomplete="off">
+      <!-- 학생 -->
+      <div id="paneS">
+        <div class="row">
+          <div class="field">
+            <label for="sid">학번</label>
+            <input type="text" id="sid" placeholder="30115" inputmode="numeric" autocomplete="off" maxlength="6">
+          </div>
+          <div class="field">
+            <label for="sname">이름</label>
+            <input type="text" id="sname" placeholder="홍길동" autocomplete="off" maxlength="10">
+          </div>
+        </div>
+        <div class="field">
+          <label for="spw">학생용 비밀번호</label>
+          <input type="password" id="spw" placeholder="비밀번호" autocomplete="off">
+        </div>
+        <button class="go" id="goS">입장하기</button>
       </div>
 
-      <div class="field">
-        <label for="text">감상문</label>
-        <textarea id="text" placeholder="어떤 편곡이 가장 인상 깊었나요? 그 이유는 무엇인가요?"></textarea>
-        <div class="count"><span id="cnt">0</span>자</div>
+      <!-- 교사 -->
+      <div id="paneT" style="display:none">
+        <div class="field">
+          <label for="tpw">교사용 비밀번호</label>
+          <input type="password" id="tpw" placeholder="비밀번호" autocomplete="off">
+        </div>
+        <button class="go" id="goT">입장하기</button>
       </div>
 
-      <button class="submit" id="btnSend">제출하기</button>
-    </div>
-
-    <div id="done">
-      <div class="mark">✽</div>
-      <p><b>제출되었습니다.</b></p>
-      <p class="small">선생님이 확인할 수 있도록 저장되었어요.</p>
+      <p class="note">
+        비밀번호는 수업용 출입문입니다. 보안장치가 아니므로
+        학생에게 알려주어도 되는 수준으로만 쓰세요.
+      </p>
     </div>
 
   </div>
@@ -171,59 +171,62 @@
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-const CLIENT_ID = '432757752918-5i46ftsts6163gtqvrulquiu0n0sklaq.apps.googleusercontent.com';
-const ALLOWED_DOMAIN = 'ai.jne.kr';
-const API_URL = 'https://script.google.com/macros/s/AKfycbzmh-zTu3VL_pTp-uZs1nVyA0Fk3V94jAzrrBz1MhEwWWNE1LRoknowGuL3sgMGycG9gQ/exec';
+/* ══ 설정 ══════════════════════════════════════ */
+var CONFIG = {
+  clientId:  '432757752918-5i46ftsts6163gtqvrulquiu0n0sklaq.apps.googleusercontent.com',
+  domain:    'ai.jne.kr',
+  studentPw: 'sp2026',
+  teacherPw: 'po8286',
+  nextPage:  'listen.html'
+};
+/* ═════════════════════════════════════════════ */
 
-let idToken = '';
-const $ = id => document.getElementById(id);
+var $ = function(id){ return document.getElementById(id); };
+var user = null;
+var role = 'student';
 
 function decodeJwt(token){
-  const b64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
-  const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  var b64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+  var bytes = Uint8Array.from(atob(b64), function(c){ return c.charCodeAt(0); });
   return JSON.parse(new TextDecoder('utf-8').decode(bytes));
 }
 
-function showMsg(kind, text){
-  const m = $('msg');
-  m.className = 'msg on ' + kind;
-  m.textContent = text;
-}
-function clearMsg(){ $('msg').className = 'msg'; }
+function showMsg(t){ $('msg').textContent = t; $('msg').classList.add('on'); }
+function clearMsg(){ $('msg').classList.remove('on'); }
 
-/* ── 로그인 ───────────────────────────── */
+/* ── 구글 로그인 ─────────────────────────── */
 function handleCredentialResponse(res){
-  let p;
+  var p;
   try { p = decodeJwt(res.credential); }
   catch(e){ alert('로그인 정보를 읽지 못했습니다. 새로고침 후 다시 시도하세요.'); return; }
 
-  const domain = p.hd || String(p.email||'').split('@')[1];
-  if (domain !== ALLOWED_DOMAIN){
-    alert('학교 계정(@' + ALLOWED_DOMAIN + ')으로 로그인하세요.');
-    google.accounts.id.disableAutoSelect();
+  var dom = p.hd || String(p.email||'').split('@')[1];
+  if (dom !== CONFIG.domain){
+    alert('학교 계정(@' + CONFIG.domain + ')으로 로그인하세요.');
+    if (window.google) google.accounts.id.disableAutoSelect();
     return;
   }
 
-  idToken = res.credential;
-  $('whoName').textContent = p.name || '';
-  $('whoMail').textContent = p.email;
-  $('headSub').textContent = '감상문을 작성해 제출하세요.';
-  $('signinArea').classList.add('off');
-  $('form').classList.add('on');
+  user = { email: p.email, name: p.name || '', token: res.credential };
+  $('whoName').textContent = user.name;
+  $('whoMail').textContent = user.email;
+  $('headSub').textContent = '구분을 고르고 비밀번호를 입력하세요.';
+  $('step1').classList.add('off');
+  $('step2').classList.add('on');
+  $('sname').value = user.name;
   $('sid').focus();
 }
 
-window.addEventListener('load', () => {
-  setTimeout(() => {
+window.addEventListener('load', function(){
+  setTimeout(function(){
     if (!(window.google && google.accounts)){
-      $('gbtn').innerHTML =
-        '<p style="font-size:13.5px;color:var(--err);text-align:center">' +
-        '구글 로그인을 불러오지 못했습니다.<br>새로고침해 보세요.</p>';
+      $('gbtn').innerHTML = '<p style="font-size:13.5px;color:var(--err);text-align:center">'
+        + '구글 로그인을 불러오지 못했습니다.<br>새로고침해 보세요.</p>';
       return;
     }
     google.accounts.id.initialize({
-      client_id: CLIENT_ID,
-      hd: ALLOWED_DOMAIN,
+      client_id: CONFIG.clientId,
+      hd: CONFIG.domain,
       callback: handleCredentialResponse,
       auto_select: false
     });
@@ -232,52 +235,80 @@ window.addEventListener('load', () => {
   }, 600);
 });
 
-/* ── 글자 수 ──────────────────────────── */
-$('text').addEventListener('input', e => {
-  $('cnt').textContent = e.target.value.trim().length;
-});
+/* ── 역할 전환 ───────────────────────────── */
+function setRole(r){
+  role = r;
+  var isS = (r === 'student');
+  $('tabS').classList.toggle('sel', isS);
+  $('tabT').classList.toggle('sel', !isS);
+  $('paneS').style.display = isS ? 'block' : 'none';
+  $('paneT').style.display = isS ? 'none' : 'block';
+  clearMsg();
+  setTimeout(function(){ (isS ? $('sid') : $('tpw')).focus(); }, 30);
+}
+$('tabS').addEventListener('click', function(){ setRole('student'); });
+$('tabT').addEventListener('click', function(){ setRole('teacher'); });
 
-/* ── 제출 ─────────────────────────────── */
-$('btnSend').addEventListener('click', async () => {
-  const sid  = $('sid').value.trim();
-  const text = $('text').value.trim();
+/* ── 세션 저장 후 이동 ───────────────────── */
+function enter(session){
+  try {
+    sessionStorage.setItem('azalea_user', JSON.stringify(session));
+  } catch(e){
+    /* 저장이 막힌 환경이면 주소로 넘깁니다 */
+    location.href = CONFIG.nextPage + '?role=' + session.role;
+    return;
+  }
+  location.href = CONFIG.nextPage;
+}
 
-  if (!sid)  { showMsg('err','학번을 입력하세요.'); $('sid').focus(); return; }
-  if (!text) { showMsg('err','감상문을 입력하세요.'); $('text').focus(); return; }
+/* ── 학생 입장 ───────────────────────────── */
+$('goS').addEventListener('click', function(){
+  var sid  = $('sid').value.trim();
+  var name = $('sname').value.trim();
+  var pw   = $('spw').value;
+
+  if (!sid)  { showMsg('학번을 입력하세요.'); $('sid').focus(); return; }
+  if (!/^\d{4,6}$/.test(sid)) { showMsg('학번은 숫자로만 입력하세요. (예: 30115)'); $('sid').focus(); return; }
+  if (!name) { showMsg('이름을 입력하세요.'); $('sname').focus(); return; }
+  if (pw !== CONFIG.studentPw){ showMsg('학생용 비밀번호가 맞지 않습니다.'); $('spw').select(); return; }
 
   clearMsg();
-  const btn = $('btnSend');
-  btn.disabled = true;
-  btn.textContent = '보내는 중…';
-
-  try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      // Apps Script는 preflight 요청을 처리하지 못하므로 text/plain으로 보냅니다
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ idToken: idToken, studentId: sid, text: text })
-    });
-    const data = await res.json();
-
-    if (data.ok){
-      $('form').classList.remove('on');
-      $('done').classList.add('on');
-      $('headSub').textContent = '수고했어요.';
-    } else {
-      showMsg('err', data.error || '저장하지 못했습니다.');
-      btn.disabled = false;
-      btn.textContent = '다시 제출하기';
-    }
-  } catch (err) {
-    showMsg('err','서버에 연결하지 못했습니다. 잠시 후 다시 시도하세요.');
-    btn.disabled = false;
-    btn.textContent = '다시 제출하기';
-  }
+  enter({
+    role: 'student',
+    email: user.email,
+    googleName: user.name,
+    studentId: sid,
+    name: name,
+    token: user.token,
+    at: Date.now()
+  });
 });
 
-/* ── 로그아웃 ─────────────────────────── */
-$('btnOut').addEventListener('click', () => {
-  google.accounts.id.disableAutoSelect();
+/* ── 교사 입장 ───────────────────────────── */
+$('goT').addEventListener('click', function(){
+  var pw = $('tpw').value;
+  if (pw !== CONFIG.teacherPw){ showMsg('교사용 비밀번호가 맞지 않습니다.'); $('tpw').select(); return; }
+
+  clearMsg();
+  enter({
+    role: 'teacher',
+    email: user.email,
+    name: user.name,
+    token: user.token,
+    at: Date.now()
+  });
+});
+
+/* Enter 키로도 입장 */
+['sid','sname','spw'].forEach(function(id){
+  $(id).addEventListener('keydown', function(e){ if(e.key==='Enter') $('goS').click(); });
+});
+$('tpw').addEventListener('keydown', function(e){ if(e.key==='Enter') $('goT').click(); });
+
+/* ── 로그아웃 ───────────────────────────── */
+$('btnOut').addEventListener('click', function(){
+  try { sessionStorage.removeItem('azalea_user'); } catch(e){}
+  if (window.google) google.accounts.id.disableAutoSelect();
   location.reload();
 });
 </script>
