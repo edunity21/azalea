@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>진달래꽃 감상수업 · 로그인</title>
+<title>진달래꽃 감상수업</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
@@ -12,14 +12,13 @@
     --ink:#1C1A1F;
     --ink-soft:#6B6570;
     --azalea:#A8326B;
-    --azalea-pale:#F3E3EC;
     --line:#DFD8DC;
     --ok:#1F7A5C;
-    --warn:#B4531A;
+    --ok-bg:#E8F3EF;
     --err:#B0243A;
+    --err-bg:#FBE9EC;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%}
   body{
     background:var(--paper);
     color:var(--ink);
@@ -28,108 +27,98 @@
     display:flex;
     align-items:center;
     justify-content:center;
+    min-height:100vh;
     padding:24px 16px;
     -webkit-font-smoothing:antialiased;
   }
   .card{
     width:100%;
-    max-width:440px;
+    max-width:460px;
     background:#fff;
     border:1px solid var(--line);
     border-radius:4px;
   }
-  .head{
-    padding:36px 32px 28px;
-    border-bottom:1px solid var(--line);
-  }
-  .eyebrow{
-    font-size:11px;
-    letter-spacing:.16em;
-    color:var(--azalea);
-    font-weight:600;
-    margin-bottom:14px;
-  }
-  h1{
-    font-size:27px;
-    font-weight:700;
-    letter-spacing:-.02em;
-    line-height:1.3;
-  }
-  .sub{
-    margin-top:10px;
-    font-size:14px;
-    color:var(--ink-soft);
-  }
-  .body{padding:28px 32px 32px}
+  .head{padding:32px 30px 24px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-size:11px;letter-spacing:.16em;color:var(--azalea);font-weight:600;margin-bottom:12px}
+  h1{font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.3}
+  .sub{margin-top:9px;font-size:14px;color:var(--ink-soft)}
+  .body{padding:26px 30px 30px}
+
   .signin{display:flex;justify-content:center;min-height:44px}
-  .hint{
-    margin-top:18px;
-    font-size:13px;
-    color:var(--ink-soft);
-    text-align:center;
-  }
+  .hint{margin-top:16px;font-size:13px;color:var(--ink-soft);text-align:center}
   .hint b{color:var(--ink);font-weight:600}
 
-  /* 결과 패널 */
-  .result{display:none;margin-top:4px}
-  .result.on{display:block}
-  .banner{
-    padding:14px 16px;
+  #form{display:none}
+  #form.on{display:block}
+  #signinArea.off{display:none}
+
+  .who{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:11px 14px;
+    background:var(--paper);
+    border-radius:3px;
+    font-size:13.5px;
+    margin-bottom:24px;
+  }
+  .who span{color:var(--ink-soft)}
+  .who b{font-weight:600;color:var(--ink)}
+  .linkbtn{
+    background:none;border:none;padding:0;
+    font-family:inherit;font-size:12.5px;
+    color:var(--azalea);cursor:pointer;
+    text-decoration:underline;white-space:nowrap;
+  }
+
+  label{display:block;font-size:13px;font-weight:600;margin-bottom:7px}
+  .field{margin-bottom:20px}
+  input[type=text],textarea{
+    width:100%;
+    font-family:inherit;
+    font-size:15px;
+    color:var(--ink);
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:11px 13px;
+    transition:border-color .15s;
+  }
+  input[type=text]:focus,textarea:focus{outline:none;border-color:var(--azalea)}
+  textarea{resize:vertical;min-height:130px;line-height:1.65}
+  .count{margin-top:6px;font-size:12px;color:var(--ink-soft);text-align:right}
+
+  .submit{
+    width:100%;
+    font-family:inherit;font-size:15px;font-weight:600;
+    padding:13px;
+    background:var(--ink);color:#fff;
+    border:none;border-radius:3px;cursor:pointer;
+    transition:background .15s;
+  }
+  .submit:hover:not(:disabled){background:#000}
+  .submit:disabled{background:#B9B3BB;cursor:default}
+  .submit:focus-visible{outline:2px solid var(--azalea);outline-offset:2px}
+
+  .msg{
+    display:none;
+    margin-bottom:20px;
+    padding:13px 15px;
     border-radius:3px;
     font-size:14px;
     font-weight:600;
-    margin-bottom:22px;
   }
-  .banner.ok{background:#E8F3EF;color:var(--ok)}
-  .banner.err{background:#FBE9EC;color:var(--err)}
+  .msg.on{display:block}
+  .msg.ok{background:var(--ok-bg);color:var(--ok)}
+  .msg.err{background:var(--err-bg);color:var(--err)}
 
-  dl{display:grid;grid-template-columns:88px 1fr;gap:11px 14px;font-size:14px}
-  dt{color:var(--ink-soft);font-size:13px}
-  dd{word-break:break-all}
-  dd .tag{
-    display:inline-block;
-    font-size:11px;
-    font-weight:600;
-    padding:1px 7px;
-    border-radius:2px;
-    margin-left:6px;
-    vertical-align:1px;
-  }
-  .tag.pass{background:var(--azalea-pale);color:var(--azalea)}
-  .tag.fail{background:#FBE9EC;color:var(--err)}
+  #done{display:none;text-align:center;padding:12px 0}
+  #done.on{display:block}
+  #done .mark{font-size:36px;color:var(--azalea);margin-bottom:14px}
+  #done p{font-size:15px;margin-bottom:6px}
+  #done .small{font-size:13px;color:var(--ink-soft)}
 
-  .actions{margin-top:26px;display:flex;gap:8px}
-  button{
-    font-family:inherit;
-    font-size:13.5px;
-    font-weight:600;
-    padding:10px 16px;
-    border-radius:3px;
-    cursor:pointer;
-    border:1px solid var(--line);
-    background:#fff;
-    color:var(--ink);
-    transition:background .15s;
-  }
-  button:hover{background:var(--paper)}
-  button:focus-visible{outline:2px solid var(--azalea);outline-offset:2px}
-  button.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
-  button.primary:hover{background:#000}
-
-  .note{
-    margin-top:24px;
-    padding-top:18px;
-    border-top:1px solid var(--line);
-    font-size:12.5px;
-    color:var(--ink-soft);
-  }
-  code{
-    font-family:ui-monospace,'SF Mono',Menlo,monospace;
-    font-size:11.5px;
-    background:var(--paper);
-    padding:1px 5px;
-    border-radius:2px;
-  }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -139,35 +128,44 @@
   <div class="head">
     <div class="eyebrow">음악 감상수업</div>
     <h1>진달래꽃, 여러 목소리로</h1>
-    <p class="sub">학교 구글 계정으로 로그인하세요.</p>
+    <p class="sub" id="headSub">학교 구글 계정으로 로그인하세요.</p>
   </div>
 
   <div class="body">
-    <!-- 로그인 영역 -->
+
     <div id="signinArea">
       <div class="signin" id="gbtn"></div>
       <p class="hint"><b>@ai.jne.kr</b> 계정만 로그인됩니다.</p>
     </div>
 
-    <!-- 결과 영역 -->
-    <div class="result" id="result">
-      <div class="banner" id="banner"></div>
-      <dl>
-        <dt>이름</dt><dd id="rName">—</dd>
-        <dt>이메일</dt><dd id="rEmail">—</dd>
-        <dt>소속</dt><dd id="rHd">—</dd>
-        <dt>만료</dt><dd id="rExp">—</dd>
-      </dl>
-      <div class="actions">
-        <button class="primary" id="btnCopy">토큰 복사</button>
-        <button id="btnReset">다시 로그인</button>
+    <div id="form">
+      <div class="who">
+        <span><b id="whoName"></b> · <span id="whoMail"></span></span>
+        <button class="linkbtn" id="btnOut">로그아웃</button>
       </div>
+
+      <div class="msg" id="msg"></div>
+
+      <div class="field">
+        <label for="sid">학번</label>
+        <input type="text" id="sid" placeholder="예: 30115" inputmode="numeric" autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label for="text">감상문</label>
+        <textarea id="text" placeholder="어떤 편곡이 가장 인상 깊었나요? 그 이유는 무엇인가요?"></textarea>
+        <div class="count"><span id="cnt">0</span>자</div>
+      </div>
+
+      <button class="submit" id="btnSend">제출하기</button>
     </div>
 
-    <p class="note">
-      이 화면은 로그인이 정상 동작하는지 확인하는 단계입니다.
-      성공하면 감상 페이지를 붙입니다.
-    </p>
+    <div id="done">
+      <div class="mark">✽</div>
+      <p><b>제출되었습니다.</b></p>
+      <p class="small">선생님이 확인할 수 있도록 저장되었어요.</p>
+    </div>
+
   </div>
 </div>
 
@@ -175,64 +173,52 @@
 <script>
 const CLIENT_ID = '432757752918-5i46ftsts6163gtqvrulquiu0n0sklaq.apps.googleusercontent.com';
 const ALLOWED_DOMAIN = 'ai.jne.kr';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzmh-zTu3VL_pTp-uZs1nVyA0Fk3V94jAzrrBz1MhEwWWNE1LRoknowGuL3sgMGycG9gQ/exec';
 
 let idToken = '';
+const $ = id => document.getElementById(id);
 
 function decodeJwt(token){
-  const part = token.split('.')[1];
-  const b64 = part.replace(/-/g,'+').replace(/_/g,'/');
-  const bin = atob(b64);
-  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+  const b64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+  const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
   return JSON.parse(new TextDecoder('utf-8').decode(bytes));
 }
 
+function showMsg(kind, text){
+  const m = $('msg');
+  m.className = 'msg on ' + kind;
+  m.textContent = text;
+}
+function clearMsg(){ $('msg').className = 'msg'; }
+
+/* ── 로그인 ───────────────────────────── */
 function handleCredentialResponse(res){
-  idToken = res.credential;
   let p;
-  try{
-    p = decodeJwt(idToken);
-  }catch(e){
-    showError('토큰을 읽지 못했습니다. 페이지를 새로고침한 뒤 다시 시도하세요.');
+  try { p = decodeJwt(res.credential); }
+  catch(e){ alert('로그인 정보를 읽지 못했습니다. 새로고침 후 다시 시도하세요.'); return; }
+
+  const domain = p.hd || String(p.email||'').split('@')[1];
+  if (domain !== ALLOWED_DOMAIN){
+    alert('학교 계정(@' + ALLOWED_DOMAIN + ')으로 로그인하세요.');
+    google.accounts.id.disableAutoSelect();
     return;
   }
 
-  const domain = p.hd || (p.email || '').split('@')[1] || '';
-  const allowed = domain === ALLOWED_DOMAIN;
-
-  document.getElementById('rName').textContent  = p.name || '—';
-  document.getElementById('rEmail').textContent = p.email || '—';
-  document.getElementById('rHd').innerHTML =
-    (domain || '없음') +
-    '<span class="tag ' + (allowed ? 'pass">허용' : 'fail">차단') + '</span>';
-  document.getElementById('rExp').textContent =
-    p.exp ? new Date(p.exp * 1000).toLocaleTimeString('ko-KR') : '—';
-
-  const banner = document.getElementById('banner');
-  if(allowed){
-    banner.className = 'banner ok';
-    banner.textContent = '로그인 성공';
-  }else{
-    banner.className = 'banner err';
-    banner.textContent = '학교 계정이 아닙니다 · ' + ALLOWED_DOMAIN + ' 계정으로 다시 로그인하세요';
-  }
-
-  document.getElementById('signinArea').style.display = 'none';
-  document.getElementById('result').classList.add('on');
-}
-
-function showError(msg){
-  const banner = document.getElementById('banner');
-  banner.className = 'banner err';
-  banner.textContent = msg;
-  document.getElementById('result').classList.add('on');
+  idToken = res.credential;
+  $('whoName').textContent = p.name || '';
+  $('whoMail').textContent = p.email;
+  $('headSub').textContent = '감상문을 작성해 제출하세요.';
+  $('signinArea').classList.add('off');
+  $('form').classList.add('on');
+  $('sid').focus();
 }
 
 window.addEventListener('load', () => {
   setTimeout(() => {
-    if(!(window.google && google.accounts)){
-      document.getElementById('gbtn').innerHTML =
+    if (!(window.google && google.accounts)){
+      $('gbtn').innerHTML =
         '<p style="font-size:13.5px;color:var(--err);text-align:center">' +
-        '구글 로그인을 불러오지 못했습니다.<br>네트워크 차단 여부를 확인하세요.</p>';
+        '구글 로그인을 불러오지 못했습니다.<br>새로고침해 보세요.</p>';
       return;
     }
     google.accounts.id.initialize({
@@ -241,21 +227,56 @@ window.addEventListener('load', () => {
       callback: handleCredentialResponse,
       auto_select: false
     });
-    google.accounts.id.renderButton(
-      document.getElementById('gbtn'),
-      { theme:'outline', size:'large', text:'signin_with', shape:'rectangular', locale:'ko', width:320 }
-    );
-  }, 700);
+    google.accounts.id.renderButton($('gbtn'),
+      { theme:'outline', size:'large', text:'signin_with', shape:'rectangular', locale:'ko', width:320 });
+  }, 600);
 });
 
-document.getElementById('btnCopy').addEventListener('click', e => {
-  navigator.clipboard.writeText(idToken).then(() => {
-    e.target.textContent = '복사됨';
-    setTimeout(() => e.target.textContent = '토큰 복사', 1500);
-  });
+/* ── 글자 수 ──────────────────────────── */
+$('text').addEventListener('input', e => {
+  $('cnt').textContent = e.target.value.trim().length;
 });
 
-document.getElementById('btnReset').addEventListener('click', () => {
+/* ── 제출 ─────────────────────────────── */
+$('btnSend').addEventListener('click', async () => {
+  const sid  = $('sid').value.trim();
+  const text = $('text').value.trim();
+
+  if (!sid)  { showMsg('err','학번을 입력하세요.'); $('sid').focus(); return; }
+  if (!text) { showMsg('err','감상문을 입력하세요.'); $('text').focus(); return; }
+
+  clearMsg();
+  const btn = $('btnSend');
+  btn.disabled = true;
+  btn.textContent = '보내는 중…';
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      // Apps Script는 preflight 요청을 처리하지 못하므로 text/plain으로 보냅니다
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ idToken: idToken, studentId: sid, text: text })
+    });
+    const data = await res.json();
+
+    if (data.ok){
+      $('form').classList.remove('on');
+      $('done').classList.add('on');
+      $('headSub').textContent = '수고했어요.';
+    } else {
+      showMsg('err', data.error || '저장하지 못했습니다.');
+      btn.disabled = false;
+      btn.textContent = '다시 제출하기';
+    }
+  } catch (err) {
+    showMsg('err','서버에 연결하지 못했습니다. 잠시 후 다시 시도하세요.');
+    btn.disabled = false;
+    btn.textContent = '다시 제출하기';
+  }
+});
+
+/* ── 로그아웃 ─────────────────────────── */
+$('btnOut').addEventListener('click', () => {
   google.accounts.id.disableAutoSelect();
   location.reload();
 });
