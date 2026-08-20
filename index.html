@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css">
 <link rel="stylesheet" href="assets/css/cloud.css?v=13">
+<link rel="stylesheet" href="assets/css/survey.css?v=2">
 </head>
 <body class="locked">
 
@@ -94,10 +95,12 @@
     <button class="tab" type="button" role="tab" data-tab="stage"   aria-selected="false">수업 진행</button>
     <button class="tab" type="button" role="tab" data-tab="records" aria-selected="false">학생 기록</button>
     <button class="tab" type="button" role="tab" data-tab="lesson"  aria-selected="false">수업 운영</button>
+    <button class="tab" type="button" role="tab" data-tab="svadmin" aria-selected="false">설문 결과</button>
     <button class="tab" type="button" role="tab" data-tab="explore" aria-selected="true">시대 탐구</button>
     <button class="tab" type="button" role="tab" data-tab="quiz"    aria-selected="false">듣고 맞히기</button>
     <button class="tab" type="button" role="tab" data-tab="order"   aria-selected="false">순서 세우기</button>
     <button class="tab" type="button" role="tab" data-tab="sheet"   aria-selected="false">감상 활동지</button>
+    <button class="tab" type="button" role="tab" data-tab="survey"  aria-selected="false">설문</button>
   </div>
 </nav>
 
@@ -321,6 +324,82 @@
     </div>
   </section>
 
+  <!-- ===== 사전·사후 설문 (학습자용) ===== -->
+  <section class="panel" id="survey" role="tabpanel">
+    <div class="sec-head">
+      <p class="eyebrow">효과성 검증</p>
+      <h2>사전 · 사후 설문</h2>
+      <p>수업 전과 후에 같은 방식으로 답합니다. 점수는 성적에 들어가지 않습니다. 솔직하게 답한 것이 가장 좋은 답입니다.</p>
+    </div>
+
+    <div class="card">
+      <div class="sv-phase">
+        <button class="sv-pick on" type="button" id="svPre"><b>사전 설문</b><span id="svPreNote">아직 시작하지 않음</span></button>
+        <button class="sv-pick" type="button" id="svPost"><b>사후 설문</b><span id="svPostNote">아직 시작하지 않음</span></button>
+      </div>
+      <p class="sv-guide" id="svGuide"></p>
+    </div>
+
+    <div id="svBody"></div>
+
+    <div class="card">
+      <div class="sv-prog">
+        <span class="txt" id="svPhaseNow">사전 설문</span>
+        <span class="track"><i id="svBar"></i></span>
+        <span class="txt" id="svCount">0 / 0 문항 응답</span>
+        <span class="saved-note" id="svSaved"></span>
+      </div>
+      <div class="btn-row" style="margin-top:18px">
+        <button class="btn" type="button" id="svSave">저장하기</button>
+        <button class="btn ghost" type="button" id="svFile">선생님께 제출 파일 만들기</button>
+      </div>
+      <p class="cap" style="margin-top:12px">고를 때마다 이 기기에 자동으로 저장됩니다.
+        온라인 제출을 쓰는 학급은 [감상 활동지] 탭의 <b>[지금 제출하기]</b>를 누르면 설문 응답도 함께 올라갑니다.</p>
+    </div>
+  </section>
+
+  <!-- ===== 설문 결과 (수업자용) ===== -->
+  <section class="panel" id="svadmin" role="tabpanel">
+    <div class="sec-head">
+      <p class="eyebrow">수업자용</p>
+      <h2>설문 결과 · 효과성 분석</h2>
+      <p>단일집단 사전-사후 설계입니다. 영역별 평균과 대응표본 t검정·효과크기를 바로 계산해 보여 줍니다.</p>
+    </div>
+
+    <div class="card">
+      <div class="quiz-score" style="border-bottom:0;padding-bottom:0;margin-bottom:0;justify-content:flex-start;gap:34px">
+        <div><b id="svN1">0</b><span>사전 응답</span></div>
+        <div><b id="svN2">0</b><span>사후 응답</span></div>
+        <div><b id="svN3">0</b><span>둘 다 (대응)</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>모으기 · 내보내기</h3>
+      <div class="btn-row" style="align-items:center">
+        <label class="btn" for="svImport">설문 파일 불러오기</label>
+        <input type="file" id="svImport" accept=".json,application/json" multiple hidden>
+        <button class="btn" type="button" id="svXls">분석 엑셀 내려받기</button>
+        <button class="btn ghost" type="button" id="svPrint">설문지 인쇄 (부록용)</button>
+      </div>
+      <p class="cap" style="margin-top:12px">엑셀은 <b>요약통계 · 학생별 · 지식 원자료 · 지식 문항분석 · 정의적 원자료 · 감상역량 · 개방형 · 문항 전문</b>
+        여덟 시트로 나옵니다. 학생이 자기 기기에서 작성했다면 <b>설문_학번_이름.json</b>을 한꺼번에 불러오세요.</p>
+    </div>
+
+    <div class="card">
+      <div class="sheet-pick">
+        <label for="svView" class="cap" style="margin:0">보기</label>
+        <select class="pick" id="svView">
+          <option value="sum">요약 · 통계</option>
+          <option value="stu">학생별 점수</option>
+          <option value="rb">서술형 채점</option>
+          <option value="item">문항 분석</option>
+        </select>
+      </div>
+      <div id="svBody2"></div>
+    </div>
+  </section>
+
   <footer class="foot">
     <b>진달래꽃</b> — 김소월(1902~1934). 1922년 「개벽」 발표, 1925년 시집 『진달래꽃』 수록. 저작권 보호기간 만료.<br>
     음원은 수업 활용을 위해 시대 양식별로 새로 편곡·제작한 것으로, 실제 시대의 원곡 녹음이 아닙니다.<br>
@@ -374,6 +453,7 @@
 <div id="printArea" class="print-only"></div>
 
 <script src="assets/js/data.js"></script>
+<script src="assets/js/survey-data.js"></script>
 <script src="assets/js/xlsx-mini.js"></script>
 
 <!-- ============================================================
@@ -412,7 +492,8 @@
 })();
 </script>
 
-<script src="assets/js/app.js"></script>
-<script src="assets/js/cloud.js?v=13"></script>
+<script src="assets/js/app.js?v=2"></script>
+<script src="assets/js/survey.js?v=2"></script>
+<script src="assets/js/cloud.js?v=14"></script>
 </body>
 </html>
