@@ -445,6 +445,13 @@ function mountSubmit() {
 var autoTimer = null, autoLast = '', autoBusy = false;
 
 function hookAutosave() {
+  /* 설문 화면의 [저장하기] 도 같이 듣는다 (survey.js) */
+  var sv = $('#svSave');
+  if (sv && !sv.dataset.clAuto) {
+    sv.dataset.clAuto = '1';
+    sv.addEventListener('click', function () { queueAutosave(1200); });
+  }
+
   var b = $('#sheetSave');
   if (!b || b.dataset.clAuto) return;
   b.dataset.clAuto = '1';
@@ -470,14 +477,17 @@ function readLocal() {
   try {
     var box = JSON.parse(localStorage.getItem('jindalrae.v3') || '{}');
     var stu = (box.roster || {})[S.sid];
-    if (!stu || !stu.tracks) return null;
-    var n = Object.keys(stu.tracks).length;
-    if (!n) return null;
+    if (!stu) return null;
+    var n = stu.tracks ? Object.keys(stu.tracks).length : 0;
+    /* 설문만 작성한 경우에도 보관해 둔다 */
+    var hasSurvey = !!(stu.survey && (stu.survey.pre || stu.survey.post));
+    if (!n && !hasSurvey) return null;
     return {
       n: n,
       raw: JSON.stringify({
         app: 'jindalrae', ver: 3, exported: stu.updated || '',
-        sid: stu.sid, name: stu.name, tracks: stu.tracks
+        sid: stu.sid, name: stu.name, tracks: stu.tracks || {},
+        survey: stu.survey || null
       }, null, 1)
     };
   } catch (e) { return null; }

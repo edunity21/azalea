@@ -16,8 +16,8 @@
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
-  const STUDENT_TABS = ["explore", "quiz", "order", "sheet"];
-  const TEACHER_TABS = ["stage", "records", "lesson", "explore"];
+  const STUDENT_TABS = ["explore", "quiz", "order", "sheet", "survey"];
+  const TEACHER_TABS = ["stage", "records", "lesson", "explore", "svadmin"];
 
   /* ---------- 저장소 ---------- */
   const Store = (function () {
@@ -198,6 +198,9 @@
 
       if (teacher) { Records.render(); Stage.show(Stage.i); goTab("stage"); }
       else { Sheet.render(); goTab("explore"); }
+
+      /* 설문 화면(survey.js)에도 로그인 사실을 알린다 */
+      if (window.SVOpen) { try { window.SVOpen(teacher ? "teacher" : "student"); } catch (e) {} }
 
       if (!silent) toast(teacher ? "수업자용 화면으로 들어왔습니다." : s.name + "님, 반갑습니다.");
     },
@@ -780,9 +783,11 @@
 
     submit() {
       const stu = Roster.of(Auth.me.sid);
-      if (!stu || !Object.keys(stu.tracks).length) { toast("저장된 기록이 없습니다.", "bad"); return; }
+      const hasSurvey = !!(stu && stu.survey && (stu.survey.pre || stu.survey.post));
+      if (!stu || (!Object.keys(stu.tracks).length && !hasSurvey)) { toast("저장된 기록이 없습니다.", "bad"); return; }
       saveBlob("제출_" + stu.sid + "_" + stu.name + "_" + fstamp() + ".json",
-        JSON.stringify({ app: "jindalrae", ver: 3, exported: stamp(), sid: stu.sid, name: stu.name, tracks: stu.tracks }, null, 1),
+        JSON.stringify({ app: "jindalrae", ver: 3, exported: stamp(), sid: stu.sid, name: stu.name,
+          tracks: stu.tracks, survey: stu.survey || null }, null, 1),
         "application/json");
       toast("제출 파일을 만들었습니다. 선생님께 전달하세요.");
     },
@@ -951,10 +956,12 @@
         rd.onload = () => {
           try {
             const d = JSON.parse(rd.result);
-            if (d.app !== "jindalrae" || !d.sid || !d.tracks) throw 0;
+            if (d.app !== "jindalrae" || !d.sid || (!d.tracks && !d.survey)) throw 0;
             const cur = roster[d.sid] || { sid: d.sid, name: d.name || "", tracks: {}, updated: "" };
             cur.name = d.name || cur.name;
-            Object.keys(d.tracks).forEach((k) => { cur.tracks[k] = d.tracks[k]; });
+            if (d.tracks) Object.keys(d.tracks).forEach((k) => { cur.tracks[k] = d.tracks[k]; });
+            /* 설문 응답도 함께 합친다 (교사가 매긴 서술 점수는 지켜 준다) */
+            if (d.survey) { if (window.SVMerge) window.SVMerge(cur, d.survey); else cur.survey = d.survey; }
             cur.updated = d.exported || stamp();
             roster[d.sid] = cur; ok++;
           } catch (e) { bad++; }
@@ -1116,6 +1123,26 @@
     setPlayIcon(false);
     Auth.start();
   }
+
+  /* ============================================================
+     survey.js 를 위한 창구
+     ------------------------------------------------------------
+     설문 화면은 별도 파일(survey.js)로 두고, 저장소·로그인·플레이어만
+     여기서 빌려 씁니다. 이 창구 말고는 app.js 내부를 건드리지 않습니다.
+     ============================================================ */
+  window.JD = {
+    Store: Store,
+    Roster: Roster,
+    Auth: Auth,
+    toast: toast,
+    goTab: goTab,
+    saveBlob: saveBlob,
+    stamp: stamp,
+    fstamp: fstamp,
+    playTrack: playTrack,
+    /* 제목을 가린 채 재생 (블라인드 감상) */
+    playBlind: function (i) { Quiz.hiding = true; playTrack(i); }
+  };
 
   document.addEventListener("DOMContentLoaded", init);
 })();
